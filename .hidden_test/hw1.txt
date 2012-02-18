@@ -1,0 +1,163 @@
+﻿ClassWork
+w(λx1.wx1)y(λzy.zx(ww(λx1.wx1))y), [x := w(λx1.wx1)]
+
+w(λt.wt)y(λzy.zw(λt.wt)(ww(λt.wt))y) [x:=w(λt.wt)]
+x(w(λt.wt))(λzy.zx(wx)y) [y:=(w(λt.wt))]
+
+xy(λzy.zx(wx)y) [z:=w(λx.wx)]	
+
+(w(λx.yx))y(λzy.z(w(λx.yx))(w(w(λx.yx)))y) [x:=(w(λx.yx))]
+
+------------
+
+(λz.z(yz))(zx)z - можно бету
+zx(y(zx))z 
+
+------------
+
+iif tru x y = 
+λbxy.bxy = tru x y = x
+
+not = λb.b fls tru
+not tru = tru fls tru = fls
+
+and = λxy.xy fls
+and tru fls = tru fls fls = fls 
+
+or = ?
+or tru tru = tru tru tru
+or tru fls = tru tru fls
+or fls tru = fls tru tru
+or fls fls = fls tru fls
+or = λxy.x tru y
+
+--------------
+
+iszro = λn. n(λx.fls) tru
+
+iszro λsz.z = 
+(λn. n(λx.fls) tru)(λsz.z) = 
+(λsz.z)(λx.fls) tru = 
+(λz.z) tru = tru
+
+iszro λsz.sz =
+(λn. n(λx.fls) tru)(λsz.sz) = 
+(λsz.sz) (λx.fls) tru = 
+(λz.(λx.fls)z) tru = 
+(λz.fls) tru = 
+fls
+
+iszro λsz.s(sz)
+(λn. n(λx.fls) tru)(λsz.s(sz)) = 
+(λsz.s(sz)) (λx.fls) tru = 
+(λsz.(λx.fls)((λx.fls)z)) (λx.fls) tru = 
+(λsz.(λx.fls)fls) (λx.fls) tru = 
+(λsz. fls) (λx.fls) tru = 
+(λz. fls) tru = 
+fls
+
+succ = λnsz.s(nsz)
+succ 0 = succ λsz.z = 
+(λnsz.s(nsz)) λsz.z =
+(λsz.s((λsz.z)sz))  =
+(λsz.s(z)) = 1
+
+plus = λmnsz.ms(nsz)
+plus 1 2 = 
+λmnsz.ms(nsz) λsz.sz λsz.s(sz) =
+λnsz.(λsz.sz)s(nsz) λsz.s(sz) =
+λnsz.(λz.sz)(nsz) λsz.s(sz) =  
+λnsz.s(nsz) λsz.s(sz) = 
+λsz.s((λsz.s(sz))sz) = 
+λsz.s(s(sz)) = 3
+
+mult1 = λmn.m(plus n)0
+mult1 3 2 = 
+3 (plus 2) 0 = 
+λsz.s(s(sz)) (plus 2) 0 = 
+(plus 2) ((plus 2) ((plus 2) 0)) = 6
+
+mult2 = λmnsz.m(ns)z
+mult2 2 3 = 
+λmnsz.m(ns)z λsz.s(sz) λsz.s(s(sz)) =
+λsz.(λsz.s(sz))((λsz.s(s(sz)))s)z = 
+λsz.(λsz.s(sz))(λz.s(s(sz)))z = 
+λsz.(λz.(λz.s(s(sz)))(s(s(sz))))z = 
+λsz.(λz.s(s(s(s(s(sz))))))z = 
+λsz.s(s(s(s(s(sz))))) = 6 
+
+---------------------------------------
+Homework
+I.1.
+λyz.xyw(zx)		[x:=λy.yw]
+λyz.(λt.tw)yw(z(λt.tw))
+    ^^^^^^^^
+beta возможно
+
+I.2.
+λxy.xy(λx.xy)x	[x:=λz.z]
+λxy.xy(λx.xy)x
+Все x связанные, beta невозможно
+
+I.3.
+xy(λxz.xyz)y	[y:=xz]
+x(xz)(λtu.t(xz)u)(xz)
+beta невозможно
+
+II.1
+(x(λx.((xy)x))y) = 
+x(λx.((xy)x))y = 
+x(λx.(xy)x)y = 
+x(λx.xyx)y =
+xyyy
+
+II.2
+((λp.(λq.((q(pr))s)))((q(pr))s)) = 
+(λp.(λq.((q(pr))s)))((q(pr))s) = 
+(λpq.(q(pr))s)((q(pr))s) = 
+(λpq.q(pr)s)(q(pr)s) =
+(λq.q((q(pr)s)r)s) =
+λq.q((q(pr)s)r)s
+
+III.
+λx.MN = S(λx.M)(λx.N)
+S = λfgx.fx(gx)
+(λfgx.fx(gx))(λt.M)(λu.N) =
+(λgx.(λt.M)x(gx))(λu.N) = 
+(λgx.M[t:=x](gx))(λu.N) = 
+(λx.M[t:=x]((λu.N)x)) = 
+λx.M[t:=x]N[u:=x] = 
+
+IV.1
+SKK = I
+S = λfgx.fx(gx)
+K = λxy.x
+
+(λfgx.fx(gx)) (λxy.x) (λxy.x) = 
+(λgx.(λxy.x)x(gx))(λxy.x) = 
+(λgx.(λy.x)(gx))(λxy.x) = 
+(λgx.x)(λxy.x) =
+λx.x = 
+I
+
+IV.2
+B = S(KS)K
+(λfgx.fx(gx)) ((λtu.t) λlmn.ln(mn)) λhj.h =
+(λfgx.fx(gx)) (λu.λlmn.ln(mn)) λhj.h =
+(λfgx.fx(gx)) (λulmn.ln(mn)) λhj.h =
+(λgx.(λulmn.ln(mn))x(gx))  λhj.h =
+(λgx.(λlmn.ln(mn))(gx))  λhj.h =
+(λgx.(λmn.(gx)n(mn))) λhj.h =
+(λgxmn.(gx)n(mn)) λhj.h =
+(λxmn.((λhj.h)x)n(mn)) =
+(λxmn.(λj.x)n(mn)) =
+(λxmn.x(mn)) =
+λxmn.x(mn) =
+λfgx.f(gx) = 
+B
+
+V.
+
+
+
+
