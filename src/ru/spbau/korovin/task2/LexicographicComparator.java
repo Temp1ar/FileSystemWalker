@@ -9,7 +9,7 @@ import java.util.Comparator;
  * And in each group of files and directories elements shows up
  * in lexicographic order.
  */
-public class LexicographicComparator implements Comparator<File> {
+class LexicographicComparator implements Comparator<File> {
 
     /**
      * Compares its two arguments for order.  Returns a negative integer,

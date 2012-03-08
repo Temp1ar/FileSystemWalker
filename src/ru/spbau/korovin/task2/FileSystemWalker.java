@@ -1,37 +1,103 @@
 package ru.spbau.korovin.task2;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 
 /**
- * Recursive file system walker. Print's out whole file system tree in
+ * Recursive file system walker. Prints out whole file system tree in
  * following format:
  * <pre><blockquote>
  * dir1
  *     |_subdir1
- *              |_file_in_deep_place.txt
+ *     |        |_file_in_deep_place.txt
  *     |_file1.txt
  * file_in_root.doc
  * </blockquote></pre>
  */
-public class FileSystemWalker {
+class FileSystemWalker {
     private static final String ACCESS_DENIED = " (access denied)";
-    private File rootFile;
+    private final FileFilter fileFilter;
+    private final Comparator<File> comparator;
 
     /**
-     * Constructs walker from the string with absolute or relative path
-     * to directory.
-     * @param rootPath Starting directory
-     * @throws FileNotFoundException If directory is not exists.
+     * Constructs walker from file filter and desired comparator.
+     *
+     * @param fileFilter File filter
+     * @param comparator Comparator for ordering files while walking
      */
-    public FileSystemWalker(String rootPath)
-            throws FileNotFoundException {
-        rootFile = new File(rootPath);
-        if(!rootFile.exists()) {
-            throw new FileNotFoundException(rootPath);
+    public FileSystemWalker(FileFilter fileFilter, Comparator<File> comparator)
+    {
+        this.fileFilter = fileFilter;
+        this.comparator = comparator;
+    }
+
+    /**
+     * Constructs walker with the desired comparator. Filter doesn't reject
+     * anything.
+     *
+     * @param comparator Comparator for ordering files while walking
+     */
+    public FileSystemWalker(Comparator<File> comparator)
+    {
+        this.fileFilter = new PatternFilter("^$");
+        this.comparator = comparator;
+    }
+
+    /**
+     * Constructs walker with default comparator and desired file filter.
+     *
+     * @param fileFilter Desired file filter
+     */
+    public FileSystemWalker(FileFilter fileFilter)
+    {
+        this.fileFilter = fileFilter;
+        this.comparator = new LexicographicComparator();
+    }
+
+    /**
+     * Constructs walker with default comparator. Filter doesn't reject
+     * anything.
+     *
+     */
+    public FileSystemWalker()
+    {
+        this.fileFilter = new PatternFilter("^$");
+        this.comparator = new LexicographicComparator();
+    }
+
+    /**
+     *  Walks whole tree from the rootPath directory.
+     * @param rootPath Starting directory.
+     * @throws java.io.FileNotFoundException If rootPath is not found.
+     */
+    public void startWalking(String rootPath) throws FileNotFoundException {
+        File rootFile = convertPathToFile(rootPath);
+
+        if(isReadableFile(rootFile)) {
+            System.out.println(rootFile.getName());
+            walkThrough(rootFile, "", rootFile.getName().length(), fileFilter);
+        } else {
+            if(rootFile != null) {
+                System.out.println(rootFile.getName() + ACCESS_DENIED);
+            } else {
+                System.out.println(rootPath + ACCESS_DENIED);
+            }
+        }
+    }
+
+    private File convertPathToFile(String rootPath) throws FileNotFoundException {
+        File rootFile = new File(rootPath);
+        try {
+            if(!rootFile.exists()) {
+                throw new FileNotFoundException(rootPath);
+            }
+        } catch(SecurityException e) {
+            return null;
         }
 
         // This is conversion from relative path to absolute,
@@ -39,65 +105,62 @@ public class FileSystemWalker {
         // rootPath = "."
         Path path = Paths.get(rootFile.getAbsolutePath()).normalize();
         rootFile = path.toFile();
+        return rootFile;
     }
 
-    /**
-     * Starts to print fs tree to console.
-     */
-    public void startWalking() {
-        if(isReadableFile(rootFile)) {
-            System.out.println(rootFile.getName());
-            walkThrough(rootFile, rootFile.getName().length());
-        } else {
-            System.out.println(rootFile.getName() + ACCESS_DENIED);
-        }
-    }
+    private void walkThrough(File root, String prefix, int offset,
+                             FileFilter fileFilter) {
+        File[] list = root.listFiles(fileFilter);
+        Arrays.sort(list, comparator);
 
-    private void walkThrough(File root, int offset) {
-        File[] list = root.listFiles(new PatternFilter("^\\."));
-        // For platform independent hidden files isolation, we should use:
-        // File[] list = root.listFiles(new HiddenFileFilter());
-        Arrays.sort(list, new LexicographicComparator());
 
         for(File file: list) {
             String accessDeniedSuffix = isReadableFile(file)
                     ? ""
                     : ACCESS_DENIED;
 
-            System.out.println(constructPrefix(offset) +
-                    file.getName() + accessDeniedSuffix);
+            String oldPrefix = prefix;
+            prefix = constructPrefix(prefix, offset);
+            System.out.println(prefix + "_" + file.getName()
+                    + accessDeniedSuffix);
 
             if(file.isDirectory() && isReadableFile(file)) {
-                // Additional offset for |_ symbols.
-                int currentOffset = file.getName().length()
-                              + ( offset == 0 ? 0 : 2 );
-                
-                offset += currentOffset;
-                walkThrough(file, offset);
-                offset -= currentOffset;
+                walkThrough(file, prefix, file.getName().length() + 1,
+                        fileFilter);
             }
+            
+            prefix = oldPrefix;
         }
     }
 
-    private String constructPrefix(int offset) {
+    private String constructPrefix(String prefix, int offset) {
         if(offset <= 0) {
-            return "";
+            return prefix;
         } else {
             // Repeat space " " symbol <offset> times
-            String output = new String(new char[offset]).replace("\0", " ");
+            char[] tmp = new char[offset];
+            Arrays.fill(tmp, ' ');
 
-            output += "|_";
-            return output;
+            prefix += new String(tmp) + "|";
+            return prefix;
         }
     }
 
     private boolean isReadableFile(File file) {
-        boolean readable = file.canRead();
-        if (file.isDirectory()) {
-            // This check is for windows systems,
-            // for unknown reasons file.canRead always return true,
-            // even for closed for this user directories
-            readable = readable && (file.listFiles() != null);
+        boolean readable;
+        if(file == null) {
+            return false;
+        }
+        try {
+            readable = file.canRead();
+            if (file.isDirectory()) {
+                // This check is for windows systems,
+                // for unknown reasons file.canRead always return true,
+                // even for closed for this user directories
+                readable = readable && (file.listFiles() != null);
+            }
+        } catch(SecurityException e) {
+            return false;
         }
         return readable;
     }

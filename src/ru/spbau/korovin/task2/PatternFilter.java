@@ -10,8 +10,8 @@ import java.util.regex.PatternSyntaxException;
  * Pattern File filter, that accepts regular expression and can
  * be used to filter off files, that match(!) regular expression.
  */
-public class PatternFilter implements FileFilter {
-    private Pattern pattern;
+class PatternFilter implements FileFilter {
+    private final Pattern pattern;
     /**
      * Tests whether or not the specified abstract file should be
      * included in a file list.

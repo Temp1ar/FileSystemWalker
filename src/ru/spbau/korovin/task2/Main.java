@@ -1,5 +1,6 @@
 package ru.spbau.korovin.task2;
 
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 
 /**
@@ -17,8 +18,9 @@ public class Main {
         }
 
         try {
-            FileSystemWalker walker = new FileSystemWalker(args[0]);
-            walker.startWalking();
+            FileFilter dotStarting = new PatternFilter("^\\.");
+            FileSystemWalker walker = new FileSystemWalker(dotStarting);
+            walker.startWalking(args[0]);
         } catch (FileNotFoundException e) {
             System.out.println("Directory not found: " + e.getMessage());
         }
