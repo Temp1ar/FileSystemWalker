@@ -18,7 +18,7 @@ public class Main {
         }
 
         try {
-            FileFilter dotStarting = new PatternFilter("^\\.");
+            FileFilter dotStarting = new PatternFilter("^\\.(.*)");
             FileSystemWalker walker = new FileSystemWalker(dotStarting);
             walker.startWalking(args[0]);
         } catch (FileNotFoundException e) {

@@ -22,8 +22,9 @@ class PatternFilter implements FileFilter {
      */
     @Override
     public boolean accept(File file) {
+        
         Matcher matcher = pattern.matcher(file.getName());
-        return !matcher.find();
+        return !matcher.matches();
     }
 
     /**
