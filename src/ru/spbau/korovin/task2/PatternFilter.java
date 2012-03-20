@@ -17,8 +17,8 @@ class PatternFilter implements FileFilter {
      * included in a file list.
      *
      * @param file The abstract file to be tested
-     * @return <code>true</code> if and only if <code>file</code>
-     *         should be included
+     * @return <code>true</code> if and only if <code>file</code> name
+     *         doesn't match regular expression.
      */
     @Override
     public boolean accept(File file) {

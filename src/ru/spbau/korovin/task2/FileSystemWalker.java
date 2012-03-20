@@ -3,6 +3,7 @@ package ru.spbau.korovin.task2;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -23,9 +24,11 @@ class FileSystemWalker {
     private static final String ACCESS_DENIED = " (access denied)";
     private final FileFilter fileFilter;
     private final Comparator<File> comparator;
+    private PrintStream out;
 
     /**
      * Constructs walker from file filter and desired comparator.
+     * Print stream is by default: System.out
      *
      * @param fileFilter File filter
      * @param comparator Comparator for ordering files while walking
@@ -34,11 +37,12 @@ class FileSystemWalker {
     {
         this.fileFilter = fileFilter;
         this.comparator = comparator;
+        this.out = System.out;
     }
 
     /**
      * Constructs walker with the desired comparator. Filter doesn't reject
-     * anything.
+     * anything. Print stream is by default: System.out
      *
      * @param comparator Comparator for ordering files while walking
      */
@@ -46,10 +50,12 @@ class FileSystemWalker {
     {
         this.fileFilter = new PatternFilter("^$");
         this.comparator = comparator;
+        this.out = System.out;
     }
 
     /**
      * Constructs walker with default comparator and desired file filter.
+     * Print stream is by default: System.out
      *
      * @param fileFilter Desired file filter
      */
@@ -57,17 +63,75 @@ class FileSystemWalker {
     {
         this.fileFilter = fileFilter;
         this.comparator = new LexicographicComparator();
+        this.out = System.out;
     }
 
     /**
      * Constructs walker with default comparator. Filter doesn't reject
-     * anything.
+     * anything. Print stream is by default: System.out
      *
      */
     public FileSystemWalker()
     {
         this.fileFilter = new PatternFilter("^$");
         this.comparator = new LexicographicComparator();
+        this.out = System.out;
+    }
+
+    /**
+     * Constructs walker from file filter, desired comparator and print stream.
+     * 
+     *
+     * @param fileFilter File filter
+     * @param comparator Comparator for ordering files while walking
+     * @param out Output print stream
+     */
+    public FileSystemWalker(FileFilter fileFilter, Comparator<File> comparator, PrintStream out)
+    {
+        this.fileFilter = fileFilter;
+        this.comparator = comparator;
+        this.out = out;
+    }
+
+    /**
+     * Constructs walker with the desired comparator and print stream.
+     * Filter doesn't reject anything.
+     *
+     * @param comparator Comparator for ordering files while walking
+     * @param out Output print stream
+     */
+    public FileSystemWalker(Comparator<File> comparator, PrintStream out)
+    {
+        this.fileFilter = new PatternFilter("^$");
+        this.comparator = comparator;
+        this.out = out;
+    }
+
+    /**
+     * Constructs walker with default comparator, desired file filter
+     * and print stream.
+     *
+     * @param fileFilter Desired file filter
+     * @param out Output print stream
+     */
+    public FileSystemWalker(FileFilter fileFilter, PrintStream out)
+    {
+        this.fileFilter = fileFilter;
+        this.comparator = new LexicographicComparator();
+        this.out = out;
+    }
+
+    /**
+     * Constructs walker with default comparator. Filter doesn't reject
+     * anything. Print stream can be passed in argument.
+     *
+     * @param out Output print stream
+     */
+    public FileSystemWalker(PrintStream out)
+    {
+        this.fileFilter = new PatternFilter("^$");
+        this.comparator = new LexicographicComparator();
+        this.out = out;
     }
 
     /**
@@ -79,13 +143,13 @@ class FileSystemWalker {
         File rootFile = convertPathToFile(rootPath);
 
         if(isReadableFile(rootFile)) {
-            System.out.println(rootFile.getName());
+            out.println(rootFile.getName());
             walkThrough(rootFile, "", rootFile.getName().length(), fileFilter);
         } else {
             if(rootFile != null) {
-                System.out.println(rootFile.getName() + ACCESS_DENIED);
+                out.println(rootFile.getName() + ACCESS_DENIED);
             } else {
-                System.out.println(rootPath + ACCESS_DENIED);
+                out.println(rootPath + ACCESS_DENIED);
             }
         }
     }
@@ -103,8 +167,14 @@ class FileSystemWalker {
         // This is conversion from relative path to absolute,
         // to show in first line name of directory in case when
         // rootPath = "."
-        Path path = Paths.get(rootFile.getAbsolutePath()).normalize();
-        rootFile = path.toFile();
+        try {
+            Path path = Paths.get(rootFile.getAbsolutePath()).normalize();
+            rootFile = path.toFile();
+        } catch(SecurityException e) {
+            System.err.println("Can't resolve absolute path, " +
+                    "will use relative.");
+        }
+        
         return rootFile;
     }
 
@@ -114,18 +184,25 @@ class FileSystemWalker {
         Arrays.sort(list, comparator);
 
 
-        for(File file: list) {
+        for(int i = 0; i < list.length; i++) {
+            File file = list[i];
             String accessDeniedSuffix = isReadableFile(file)
                     ? ""
                     : ACCESS_DENIED;
 
             String oldPrefix = prefix;
-            prefix = constructPrefix(prefix, offset);
-            System.out.println(prefix + "_" + file.getName()
+            boolean lastOnLevel = (i == list.length - 1);
+            prefix = constructPrefix(prefix, offset, lastOnLevel);
+            out.println(
+                    prefix
+                    + (lastOnLevel ? "|" : "")
+                    + "_"
+                    + file.getName()
                     + accessDeniedSuffix);
 
             if(file.isDirectory() && isReadableFile(file)) {
-                walkThrough(file, prefix, file.getName().length() + 1,
+                walkThrough(file, prefix,
+                        file.getName().length() + 1 + (lastOnLevel ? 1 : 0),
                         fileFilter);
             }
             
@@ -133,7 +210,7 @@ class FileSystemWalker {
         }
     }
 
-    private String constructPrefix(String prefix, int offset) {
+    private String constructPrefix(String prefix, int offset, boolean last) {
         if(offset <= 0) {
             return prefix;
         } else {
@@ -141,7 +218,7 @@ class FileSystemWalker {
             char[] tmp = new char[offset];
             Arrays.fill(tmp, ' ');
 
-            prefix += new String(tmp) + "|";
+            prefix += new String(tmp) + (last ? "" : "|");
             return prefix;
         }
     }
